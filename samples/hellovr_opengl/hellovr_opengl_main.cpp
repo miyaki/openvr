@@ -1,9 +1,19 @@
 //========= Copyright Valve Corporation ============//
 
-#include <SDL.h>
+#define NO_SDL_GLEXT
+#include <SDL2/SDL.h>
 #include <GL/glew.h>
-#include <SDL_opengl.h>
-#include <GL/glu.h>
+#include <SDL2/SDL_opengl.h>
+#if defined(__APPLE__)
+#include <OpenGL/glu.h>
+//#include <glew.h>
+// Apple's version of glut.h #undef's APIENTRY, redefine it
+#define APIENTRY
+#define stricmp strcasecmp
+#include <unistd.h>
+#else
+#include <gl/glu.h>
+#endif
 #include <stdio.h>
 #include <string>
 #include <cstdlib>
@@ -223,13 +233,21 @@ void dprintf( const char *fmt, ... )
 	char buffer[ 2048 ];
 
 	va_start( args, fmt );
-	vsprintf_s( buffer, fmt, args );
+#if defined(__APPLE__)
+  vsnprintf( buffer, sizeof(buffer), fmt, args);
+#else
+    vsprintf_s( buffer, fmt, args );
+#endif
 	va_end( args );
 
 	if ( g_bPrintf )
 		printf( "%s", buffer );
 
-	OutputDebugStringA( buffer );
+#if defined(__APPLE__)
+  //NSLog( @"%s", buffer );
+#else
+  OutputDebugStringA( buffer );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -347,7 +365,11 @@ bool CMainApplication::BInit()
 	{
 		m_pHMD = NULL;
 		char buf[1024];
-		sprintf_s( buf, sizeof( buf ), "Unable to init VR runtime: %s", vr::VR_GetVRInitErrorAsEnglishDescription( eError ) );
+#if defined(__APPLE__)
+    snprintf( buf, sizeof( buf ), "Unable to init VR runtime");
+#else
+    sprintf_s( buf, sizeof( buf ), "Unable to init VR runtime: %s", vr::VR_GetStringForHmdError( eError ) );
+#endif
 		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "VR_Init Failed", buf, NULL );
 		return false;
 	}
@@ -360,7 +382,11 @@ bool CMainApplication::BInit()
 		vr::VR_Shutdown();
 
 		char buf[1024];
+#if defined(__APPLE__)
+		snprintf( buf, sizeof( buf ), "Unable to get render model interface: %s", vr::VR_GetVRInitErrorAsEnglishDescription( eError ) );
+#else
 		sprintf_s( buf, sizeof( buf ), "Unable to get render model interface: %s", vr::VR_GetVRInitErrorAsEnglishDescription( eError ) );
+#endif
 		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "VR_Init Failed", buf, NULL );
 		return false;
 	}

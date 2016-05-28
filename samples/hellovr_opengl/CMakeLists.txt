@@ -3,9 +3,10 @@ add_executable (hellovr hellovr_opengl_main.cpp ../../samples/shared/pathtools.c
 
 include_directories(${SDL2_INCLUDE_DIR} "${OpenVR_SOURCE_DIR}/headers" "${OpenVR_SOURCE_DIR}/samples")
 
-find_library(OPENVR_LIB openvr_api "${OpenVR_SOURCE_DIR}/lib/linux${ARCH}" NO_DEFAULT_PATH) #TODO other operating systems
+find_library(OPENVR_LIB openvr_api "${OpenVR_SOURCE_DIR}/lib/osx32" NO_DEFAULT_PATH) #TODO other operating systems
 MESSAGE ("Found libopenvr_api: ${OPENVR_LIB}")
 
+find_library(OpenGL_LIBRARY OpenGL)
 find_package(GLEW REQUIRED)
 include_directories(${GLEW_INCLUDE_DIRS})
 
@@ -19,4 +20,4 @@ configure_file(../bin/cube_texture.png ../cube_texture.png COPYONLY)
 #set_property(TARGET hellovr PROPERTY CXX_STANDARD 11) #Requires CMake 3.1
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 
-target_link_libraries (hellovr LINK_PUBLIC openvr_api ${SDL2_LIBRARY} ${OPENVR_LIB} ${GLEW_LIBRARIES} dl GL)
+target_link_libraries (hellovr LINK_PUBLIC openvr_api ${SDL2_LIBRARY} ${OPENVR_LIB} ${GLEW_LIBRARIES} dl ${OpenGL_LIBRARY})

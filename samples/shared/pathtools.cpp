@@ -8,12 +8,14 @@
 #include <direct.h>
 #include <Shobjidl.h>
 #include <KnownFolders.h>
-#elif defined OSX
+#elif defined(__APPLE__)
 #include <mach-o/dyld.h>
 #include <dlfcn.h>
 #include "osxfilebridge.h"
 #define _S_IFDIR S_IFDIR     // really from tier0/platform.h which we dont have yet
 #define _MAX_PATH MAX_PATH   // yet another form of _PATH define we use
+#define stricmp strcasecmp
+#include <unistd.h>
 #elif defined(__linux__)
 #include <dlfcn.h>
 #include <stdio.h>
@@ -37,7 +39,7 @@ std::string Path_GetExecutablePath()
 	size_t nBuff = sizeof(rchPath);
 #if defined( _WIN32 )
 	bSuccess = ::GetModuleFileNameA(NULL, rchPath, (DWORD)nBuff) > 0;
-#elif defined OSX
+#elif defined(__APPLE__)
 	uint32_t _nBuff = nBuff; 
 	bSuccess = _NSGetExecutablePath(rchPath, &_nBuff) == 0;
 	rchPath[nBuff-1] = '\0';
@@ -364,7 +366,7 @@ std::string GetThisModulePath()
 	delete [] pchPath;
 	return sPath;
 
-#elif defined( OSX ) || defined( __linux__ )
+#elif defined(__APPLE__) || defined( __linux__ )
 	// get the addr of a function in vrclient.so and then ask the dlopen system about it
 	Dl_info info;
 	dladdr( (void *)GetThisModulePath, &info );
@@ -478,7 +480,7 @@ std::string Path_FindParentSubDirectoryRecursively( const std::string &strStartD
 unsigned char * Path_ReadBinaryFile( const std::string &strFilename, int *pSize )
 {
 	FILE *f;
-#if defined( POSIX )
+#if defined( POSIX ) || defined(__APPLE__)
 	f = fopen( strFilename.c_str(), "rb" );
 #else
 	errno_t err = fopen_s(&f, strFilename.c_str(), "rb");
@@ -544,7 +546,7 @@ std::string Path_ReadTextFile( const std::string &strFilename )
 bool Path_WriteStringToTextFile( const std::string &strFilename, const char *pchData )
 {
 	FILE *f;
-#if defined( POSIX )
+#if defined( POSIX ) || defined(__APPLE__)
 	f = fopen( strFilename.c_str(), "w" );
 #else
 	errno_t err = fopen_s(&f, strFilename.c_str(), "w");
